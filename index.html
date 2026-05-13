@@ -172,7 +172,7 @@ function startRoll(){
   if(rolling)return;rolling=true;
   const btn=document.getElementById('rollBtn');btn.disabled=true;
   const d=DICE.find(x=>x.label===selectedDice),area=document.getElementById('resultArea');
-  area.innerHTML=`<div class="result-card animating"><div class="result-meta"><div class="result-type">Бросок: <span>${quantity}${selectedDice}</span></div></div><div class="result-total-label">ИТОГО</div><div class="result-total" id="liveTotal">—</div><div class="dice-results" id="liveDice">${Array.from({length:quantity},()=>`<div class="dice-badge">?</div>`).join('')}</div></div>`;
+  area.innerHTML=`<div class="result-card animating"><div class="result-meta"><div class="result-type">ROLL: <span>${quantity}${selectedDice}</span></div></div><div class="result-total-label">GRAND TOTAL</div><div class="result-total" id="liveTotal">—</div><div class="dice-results" id="liveDice">${Array.from({length:quantity},()=>`<div class="dice-badge">?</div>`).join('')}</div></div>`;
   const dur=900+Math.random()*300;let elapsed=0;
   const t=setInterval(()=>{
     elapsed+=60;
@@ -189,9 +189,9 @@ function finishRoll(){
     <div class="result-card">
       <div class="result-meta">
         <div class="result-type">ROLL: <span>${quantity}${selectedDice}</span></div>
-        <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--text-muted);letter-spacing:0.05em">${quantity} куб${quantity===1?'ик':'иков'}</div>
+        <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--text-muted);letter-spacing:0.05em">${quantity} ${quantity===1?'die':'dice'}</div>
       </div>
-      <div class="result-total-label">>GRAND TOTAL</div>
+      <div class="result-total-label">GRAND TOTAL</div>
       <div class="result-total">${total}</div>
       <div class="dice-results">${results.map(r=>`<div class="dice-badge">${r}</div>`).join('')}</div>
     </div>`;
