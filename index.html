@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Arcane Dice Roller | Legendary Rolls</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-deep: #0d0b14;
+            --bg-card: #16121f;
+            --bg-chip: #1e1830;
+            --bg-chip-active: #2d1f4e;
+            --gold: #c9a227;
+            --gold-light: #e8c55a;
+            --gold-dim: #7a6020;
+            --crimson: #9b2335;
+            --crimson-light: #c7324a;
+            --text-primary: #f0e6c8;
+            --text-secondary: #8a7b60;
+            --text-muted: #4a4060;
+            --border: rgba(201, 162, 39, 0.2);
+            --border-active: rgba(201, 162, 39, 0.6);
+        }
+
+        body {
+            font-family: 'Crimson Pro', Georgia, serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            background-image: radial-gradient(ellipse at 20% 10%, rgba(155, 35, 53, 0.12) 0%, transparent 50%),
+                              radial-gradient(ellipse at 80% 80%, rgba(60, 30, 100, 0.18) 0%, transparent 50%);
+            min-height: 100vh;
+        }
+
+        .outer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 12px 32px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 20px 16px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 0 30px rgba(201, 162, 39, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(201, 162, 39, 0.3), transparent);
+        }
+
+        .section-label {
+            font-family: 'Cinzel', serif;
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .dice-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .dice-chip {
+            background: var(--bg-chip);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 6px 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.18s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dice-chip:active {
+            transform: scale(0.95);
+        }
+
+        .dice-chip.active {
+            background: var(--bg-chip-active);
+            border-color: var(--border-active);
+            box-shadow: 0 0 12px rgba(201, 162, 39, 0.15), inset 0 0 8px rgba(201, 162, 39, 0.05);
+        }
+
+        .dice-chip.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        }
+
+        .dice-icon {
+            width: 28px;
+            height: 28px;
+        }
+
+        .dice-label {
+            font-family: 'Cinzel', serif;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            letter-spacing: 0.04em;
+        }
+
+        .dice-chip.active .dice-label {
+            color: var(--gold-light);
+        }
+
+        .qty-section {
+            margin-bottom: 20px;
+        }
+
+        .qty-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-chip);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 14px;
+        }
+
+        .qty-label {
+            font-family: 'Cinzel', serif;
+            font-size: 12px;
+            color: var(--text-secondary);
+            letter-spacing: 0.05em;
+        }
+
+        .qty-controls {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .qty-btn {
+            width: 32px;
+            height: 32px;
+            background: rgba(201, 162, 39, 0.08);
+            border: 1px solid var(--gold-dim);
+            border-radius: 8px;
+            color: var(--gold);
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            font-family: 'Crimson Pro', serif;
+            line-height: 1;
+            padding-bottom: 1px;
+        }
+
+        .qty-btn:active {
+            transform: scale(0.92);
+            background: rgba(201, 162, 39, 0.18);
+        }
+
+        .qty-btn:disabled {
+            opacity: 0.3;
+            cursor: default;
+        }
+
+        .qty-value {
+            font-family: 'Cinzel', serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            min-width: 28px;
+            text-align: center;
+        }
+
+        .roll-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #8b1a2a 0%, #6b1222 50%, #8b1a2a 100%);
+            border: 1px solid var(--crimson-light);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: 'Cinzel', serif;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 20px rgba(155, 35, 53, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .roll-btn:active {
+            transform: scale(0.98);
+        }
+
+        .roll-btn:disabled {
+            opacity: 0.5;
+            cursor: default;
+            transform: none;
+        }
+
+        .result-area {
+            margin-top: 20px;
+        }
+
+        .placeholder {
+            text-align: center;
+            padding: 28px 16px;
+            border: 1px dashed rgba(201, 162, 39, 0.12);
+            border-radius: 12px;
+            color: var(--text-muted);
+            font-style: italic;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .placeholder .dice-big {
+            font-size: 36px;
+            margin-bottom: 10px;
+            opacity: 0.4;
+            display: block;
+        }
+
+        .result-card {
+            background: rgba(45, 31, 78, 0.25);
+            border: 1px solid rgba(201, 162, 39, 0.15);
+            border-radius: 12px;
+            padding: 16px 14px;
+            animation: fadeSlide 0.3s ease;
+        }
+
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(201, 162, 39, 0.1);
+        }
+
+        .result-type {
+            font-family: 'Cinzel', serif;
+            font-size: 13px;
+            color: var(--text-secondary);
+            letter-spacing: 0.06em;
+        }
+
+        .result-type span {
+            color: var(--gold);
+            font-weight: 600;
+        }
+
+        .result-total-label {
+            font-family: 'Cinzel', serif;
+            font-size: 10px;
+            color: var(--text-muted);
+            letter-spacing: 0.1em;
+            text-align: center;
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+
+        .result-total {
+            font-family: 'Cinzel', serif;
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--gold-light);
+            text-align: center;
+            text-shadow: 0 0 24px rgba(201, 162, 39, 0.5);
+            line-height: 1;
+            margin: 6px 0 14px;
+            letter-spacing: 0.02em;
+        }
+
+        .dice-results {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+        }
+
+        .dice-badge {
+            background: var(--bg-chip);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-family: 'Cinzel', serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            min-width: 38px;
+            text-align: center;
+        }
+
+        .repeat-btn {
+            margin-top: 14px;
+            width: 100%;
+            padding: 11px;
+            background: transparent;
+            border: 1px solid var(--gold-dim);
+            border-radius: 12px;
+            color: var(--gold);
+            font-family: 'Cinzel', serif;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.07em;
+            cursor: pointer;
+            transition: all 0.18s;
+        }
+
+        .repeat-btn:hover {
+            background: rgba(201, 162, 39, 0.08);
+            border-color: var(--gold);
+        }
+
+        .repeat-btn:active {
+            transform: scale(0.98);
+        }
+
+        .animating .dice-badge {
+            animation: pulse 0.15s ease infinite alternate;
+        }
+
+        @keyframes pulse {
+            from {
+                transform: scale(1);
+                opacity: 0.7;
+            }
+            to {
+                transform: scale(1.05);
+                opacity: 1;
+            }
+        }
+
+        .history-section {
+            width: 100%;
+            max-width: 400px;
+            margin-top: 16px;
+        }
+
+        .history-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 0 2px;
+        }
+
+        .history-title {
+            font-family: 'Cinzel', serif;
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .clear-btn {
+            font-family: 'Cinzel', serif;
+            font-size: 10px;
+            letter-spacing: 0.08em;
+            color: var(--crimson-light);
+            background: transparent;
+            border: 1px solid rgba(199, 50, 74, 0.3);
+            border-radius: 6px;
+            padding: 4px 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .clear-btn:hover {
+            background: rgba(199, 50, 74, 0.1);
+            border-color: var(--crimson-light);
+        }
+
+        .clear-btn:active {
+            transform: scale(0.96);
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .history-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            animation: fadeSlide 0.25s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .history-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg, var(--gold-dim), transparent);
+        }
+
+        .history-left {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .history-roll {
+            font-family: 'Cinzel', serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            letter-spacing: 0.05em;
+        }
+
+        .history-roll span {
+            color: var(--gold);
+        }
+
+        .history-dice {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 2px;
+        }
+
+        .history-badge {
+            background: var(--bg-chip);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            padding: 2px 7px;
+            font-family: 'Cinzel', serif;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .history-right {
+            text-align: right;
+        }
+
+        .history-total {
+            font-family: 'Cinzel', serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--gold-light);
+            letter-spacing: 0.02em;
+        }
+
+        .history-time {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-style: italic;
+            margin-top: 2px;
+        }
+    </style>
+</head>
+<body>
+<div class="outer">
+    <div class="card">
+        <div class="section-label">⚡ CHOOSE DIE</div>
+        <div class="dice-grid" id="diceGrid"></div>
+        <div class="qty-section">
+            <div class="section-label">NUMBER OF DICE</div>
+            <div class="qty-row">
+                <div class="qty-label">Quantity</div>
+                <div class="qty-controls">
+                    <button class="qty-btn" id="btnMinus">−</button>
+                    <div class="qty-value" id="qtyVal">1</div>
+                    <button class="qty-btn" id="btnPlus">+</button>
+                </div>
+            </div>
+        </div>
+        <button class="roll-btn" id="rollBtn">🎲 ROLL THE DICE</button>
+        <div class="result-area" id="resultArea">
+            <div class="placeholder">
+                <span class="dice-big">🎲</span>
+                Pick a die and<br>try your luck
+            </div>
+        </div>
+    </div>
+
+    <div class="history-section" id="historySection" style="display:none">
+        <div class="history-header">
+            <div class="history-title">📜 ROLL HISTORY</div>
+            <button class="clear-btn" id="clearBtn">✕ CLEAR</button>
+        </div>
+        <div class="history-list" id="historyList"></div>
+    </div>
+</div>
+
+<script>
+    const DICE = [
+        { label: 'd4', faces: 4 },
+        { label: 'd6', faces: 6 },
+        { label: 'd8', faces: 8 },
+        { label: 'd10', faces: 10 },
+        { label: 'd%', faces: 'percent' },
+        { label: 'd12', faces: 12 },
+        { label: 'd20', faces: 20 },
+        { label: 'd100', faces: 100 }
+    ];
+    let selectedDice = 'd20';
+    let quantity = 1;
+    let rolling = false;
+    let history = [];
+
+    function rollDie(faces) {
+        if (faces === 'percent') {
+            // Percentile die: 10,20,30...100
+            return Math.floor(Math.random() * 10) * 10 + 10;
+        }
+        return Math.floor(Math.random() * faces) + 1;
+    }
+
+    function rollDice(type, qty) {
+        const diceData = DICE.find(d => d.label === type);
+        const faces = diceData.faces;
+        const results = [];
+        for (let i = 0; i < qty; i++) {
+            results.push(rollDie(faces));
+        }
+        return results;
+    }
+
+    function getMaxFaces(type) {
+        const d = DICE.find(x => x.label === type);
+        return d.faces === 'percent' ? 100 : d.faces;
+    }
+
+    function getMinFaces(type) {
+        const d = DICE.find(x => x.label === type);
+        return d.faces === 'percent' ? 10 : 1;
+    }
+
+    // SVG shape for each die type
+    function shape(type, active) {
+        const colorFill = active ? '#c9a227' : '#3a3050';
+        const strokeColor = active ? '#e8c55a' : '#4a4060';
+        const textColor = active ? '#e8c55a' : '#8a7b60';
+        const numberLabel = type.replace('d', '');
+        
+        const shapes = {
+            d4: `<polygon points="14,3 25,23 3,23" stroke="${strokeColor}" stroke-width="1.2" fill="${colorFill}" fill-opacity="0.15"/>`,
+            d6: `<rect x="4" y="4" width="20" height="20" rx="3" stroke="${strokeColor}" stroke-width="1.2" fill="${colorFill}" fill-opacity="0.15"/>`,
+            d8: `<polygon points="14,2 26,14 14,26 2,14" stroke="${strokeColor}" stroke-width="1.2" fill="${colorFill}" fill-opacity="0.15"/>`,
+            d10: `<polygon points="14,2 26,10 22,24 6,24 2,10" stroke="${strokeColor}" stroke-width="1.2" fill="${colorFill}" fill-opacity="0.15"/>`,
+            'd%': `<polygon points="14,2 26,10 22,24 6,24 2,10" stroke="${strokeColor}" stroke-width="1.2" fill="${colorFill}" fill-opacity="0.15"/>`,
+            d12: `<polygon points="14,2 23,7 26,17 20,25 8,25 2,17 5,7" stroke="${strokeColor}" stroke-width="1.2" fill="${colorFill}" fill-opacity="0.15"/>`,
+            d20: `<polygon points="14,2 25,9 25,20 14,26 3,20 3,9" stroke="${strokeColor}" stroke-width="1.2" fill="${colorFill}" fill-opacity="0.15"/>`,
+            d100: `<circle cx="14" cy="14" r="11" stroke="${strokeColor}" stroke-width="1.2" fill="${colorFill}" fill-opacity="0.15"/>`
+        };
+        
+        let svgContent = shapes[type] || shapes.d6;
+        svgContent += `<text x="14" y="17" text-anchor="middle" font-family="Cinzel,serif" font-size="8" font-weight="700" fill="${textColor}">${numberLabel}</text>`;
+        return svgContent;
+    }
+
+    function renderGrid() {
+        const grid = document.getElementById('diceGrid');
+        grid.innerHTML = '';
+        DICE.forEach(die => {
+            const chip = document.createElement('div');
+            chip.className = 'dice-chip' + (die.label === selectedDice ? ' active' : '');
+            chip.innerHTML = `
+                <svg class="dice-icon" viewBox="0 0 28 28" fill="none">${shape(die.label, die.label === selectedDice)}</svg>
+                <div class="dice-label">${die.label}</div>
+            `;
+            chip.addEventListener('click', () => {
+                if (rolling) return;
+                selectedDice = die.label;
+                renderGrid();
+            });
+            grid.appendChild(chip);
+        });
+    }
+
+    function updateQuantityUI() {
+        document.getElementById('qtyVal').textContent = quantity;
+        document.getElementById('btnMinus').disabled = quantity <= 1;
+        document.getElementById('btnPlus').disabled = quantity >= 20;
+    }
+
+    function formatTimestamp(ts) {
+        const date = new Date(ts);
+        return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    function renderHistory() {
+        const historySection = document.getElementById('historySection');
+        const historyList = document.getElementById('historyList');
+        if (history.length === 0) {
+            historySection.style.display = 'none';
+            return;
+        }
+        historySection.style.display = 'block';
+        historyList.innerHTML = '';
+        [...history].reverse().forEach(entry => {
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            const diceBadges = entry.results.map(r => `<div class="history-badge">${r}</div>`).join('');
+            item.innerHTML = `
+                <div class="history-left">
+                    <div class="history-roll">${entry.qty}<span>${entry.type}</span></div>
+                    <div class="history-dice">${diceBadges}</div>
+                </div>
+                <div class="history-right">
+                    <div class="history-total">${entry.total}</div>
+                    <div class="history-time">${formatTimestamp(entry.ts)}</div>
+                </div>
+            `;
+            historyList.appendChild(item);
+        });
+    }
+
+    function addToHistory(type, qty, results, total) {
+        history.push({
+            type: type,
+            qty: qty,
+            results: results,
+            total: total,
+            ts: Date.now()
+        });
+        if (history.length > 20) history.shift();
+        renderHistory();
+    }
+
+    function finishRoll() {
+        const results = rollDice(selectedDice, quantity);
+        const total = results.reduce((a, b) => a + b, 0);
+        const area = document.getElementById('resultArea');
+        area.innerHTML = `
+            <div class="result-card">
+                <div class="result-meta">
+                    <div class="result-type">Roll: <span>${quantity}${selectedDice}</span></div>
+                    <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--text-muted);letter-spacing:0.05em">${quantity} ${quantity === 1 ? 'die' : 'dice'}</div>
+                </div>
+                <div class="result-total-label">GRAND TOTAL</div>
+                <div class="result-total">${total}</div>
+                <div class="dice-results">${results.map(r => `<div class="dice-badge">${r}</div>`).join('')}</div>
+                <button class="repeat-btn" id="repeatBtn">⟳ ROLL AGAIN</button>
+            </div>
+        `;
+        document.getElementById('repeatBtn').addEventListener('click', startRoll);
+        addToHistory(selectedDice, quantity, results, total);
+        rolling = false;
+        document.getElementById('rollBtn').disabled = false;
+    }
+
+    function startRoll() {
+        if (rolling) return;
+        rolling = true;
+        const rollBtn = document.getElementById('rollBtn');
+        rollBtn.disabled = true;
+        const currentDiceData = DICE.find(d => d.label === selectedDice);
+        const faces = currentDiceData.faces;
+        const area = document.getElementById('resultArea');
+        
+        area.innerHTML = `
+            <div class="result-card animating">
+                <div class="result-meta">
+                    <div class="result-type">Roll: <span>${quantity}${selectedDice}</span></div>
+                </div>
+                <div class="result-total-label">GRAND TOTAL</div>
+                <div class="result-total" id="liveTotal">—</div>
+                <div class="dice-results" id="liveDice">
+                    ${Array.from({ length: quantity }, () => `<div class="dice-badge">?</div>`).join('')}
+                </div>
+            </div>
+        `;
+        
+        const duration = 800 + Math.random() * 300;
+        let startTime = performance.now();
+        let intervalId;
+        
+        function animateRoll(now) {
+            const elapsed = now - startTime;
+            // generate random fake results
+            const fakeResults = Array.from({ length: quantity }, () => rollDie(faces));
+            const fakeTotal = fakeResults.reduce((a, b) => a + b, 0);
+            const liveDiceDivs = document.querySelectorAll('#liveDice .dice-badge');
+            if (liveDiceDivs.length) {
+                fakeResults.forEach((val, idx) => {
+                    if (liveDiceDivs[idx]) liveDiceDivs[idx].textContent = val;
+                });
+            }
+            const totalDiv = document.getElementById('liveTotal');
+            if (totalDiv) totalDiv.textContent = fakeTotal;
+            
+            if (elapsed >= duration) {
+                clearInterval(intervalId);
+                finishRoll();
+            }
+        }
+        
+        intervalId = setInterval(() => {
+            const now = performance.now();
+            animateRoll(now);
+        }, 60);
+        startTime = performance.now();
+        intervalId = setInterval(() => animateRoll(performance.now()), 60);
+        // ensure final cleanup after max duration
+        setTimeout(() => {
+            if (rolling) {
+                clearInterval(intervalId);
+                finishRoll();
+            }
+        }, duration + 150);
+    }
+
+    // Event binding
+    document.getElementById('btnMinus').addEventListener('click', () => {
+        if (quantity > 1) {
+            quantity--;
+            updateQuantityUI();
+        }
+    });
+    document.getElementById('btnPlus').addEventListener('click', () => {
+        if (quantity < 20) {
+            quantity++;
+            updateQuantityUI();
+        }
+    });
+    document.getElementById('rollBtn').addEventListener('click', startRoll);
+    document.getElementById('clearBtn').addEventListener('click', () => {
+        history = [];
+        renderHistory();
+    });
+    
+    // Telegram WebApp integration (optional)
+    if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.ready();
+        window.Telegram.WebApp.expand();
+    }
+    
+    renderGrid();
+    updateQuantityUI();
+</script>
+</body>
+</html>
