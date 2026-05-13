@@ -84,13 +84,13 @@ body{font-family:'Crimson Pro',Georgia,serif;background:var(--bg-deep);color:var
         </div>
       </div>
     </div>
-    <button class="roll-btn" id="rollBtn">🎲 ROLL THE DICE</button>
     <div class="result-area" id="resultArea">
       <div class="placeholder">
         <span class="dice-big">🎲</span>
 	Pick a die and<br>try your luck
       </div>
-    </div>
+    </div>    
+    <button class="roll-btn" id="rollBtn">🎲 ROLL THE DICE</button>
   </div>
 
   <div class="history-section" id="historySection" style="display:none">
@@ -194,9 +194,7 @@ function finishRoll(){
       <div class="result-total-label">>GRAND TOTAL</div>
       <div class="result-total">${total}</div>
       <div class="dice-results">${results.map(r=>`<div class="dice-badge">${r}</div>`).join('')}</div>
-      <button class="repeat-btn" id="repeatBtn">⟳ ROLL AGAIN</button>
     </div>`;
-  document.getElementById('repeatBtn').addEventListener('click',startRoll);
   addToHistory(selectedDice,quantity,results,total);
   rolling=false;document.getElementById('rollBtn').disabled=false;
 }
